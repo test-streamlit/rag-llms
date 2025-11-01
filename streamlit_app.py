@@ -30,7 +30,8 @@ def display_pdf(uploaded_file):
     base64_pdf = base64.b64encode(bytes_data).decode('utf-8')
     
     # Embed PDF in HTML - simple iframe approach
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
+    pdf_display = f'<object data="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="700" height="1000"><embed src="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="700" height="1000" /></object>'
+
     
     # Display file
     st.markdown(pdf_display, unsafe_allow_html=True)
