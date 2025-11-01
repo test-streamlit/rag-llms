@@ -12,7 +12,8 @@ def display_pdf(uploaded_file):
     """
     Display a PDF file that has been uploaded to Streamlit.
 
-    The PDF will be displayed in an iframe, with the width and height set to 700x1000 pixels.
+    Uses Streamlit's built-in st.pdf() function which works reliably
+    both locally and on Streamlit Cloud.
 
     Parameters
     ----------
@@ -23,18 +24,8 @@ def display_pdf(uploaded_file):
     -------
     None
     """
-    # Read file as bytes:
-    bytes_data = uploaded_file.getvalue()
-    
-    # Convert to Base64
-    base64_pdf = base64.b64encode(bytes_data).decode('utf-8')
-    
-    # Embed PDF in HTML - simple iframe approach
-    pdf_display = f'<object data="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="700" height="1000"><embed src="data:application/pdf;base64,{base64_pdf}" type="application/pdf" width="700" height="1000" /></object>'
-
-    
-    # Display file
-    st.markdown(pdf_display, unsafe_allow_html=True)
+    # Use Streamlit's built-in PDF viewer - works on both local and hosted environments
+    st.pdf(uploaded_file, height=1000)
 
 
 
