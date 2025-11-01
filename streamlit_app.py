@@ -29,11 +29,26 @@ def display_pdf(uploaded_file):
     # Convert to Base64
     base64_pdf = base64.b64encode(bytes_data).decode('utf-8')
     
-    # Embed PDF in HTML
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="700" height="1000" type="application/pdf"></iframe>'
-    
+    # Embed PDF using object/embed to avoid Chrome blocking data: URLs in iframes
+    pdf_display = (
+        f'<object data="data:application/pdf;base64,{base64_pdf}" '
+        f'type="application/pdf" width="700" height="1000">'
+        f'<embed src="data:application/pdf;base64,{base64_pdf}" '
+        f'type="application/pdf" width="700" height="1000" />'
+        f'</object>'
+    )
+
     # Display file
     st.markdown(pdf_display, unsafe_allow_html=True)
+
+    # Fallback: allow download/open in new tab if embed fails
+    st.download_button(
+        label="Download PDF",
+        data=bytes_data,
+        file_name=uploaded_file.name,
+        mime="application/pdf",
+    )
+
 
 
 def load_streamlit_page():
