@@ -1,11 +1,15 @@
 
 import streamlit as st  
 from functions import *
-import base64
+from dotenv import load_dotenv
+import os
 
-# Initialize the API key in session state if it doesn't exist
+# Load environment variables
+load_dotenv()
+
+# Initialize API key from environment or Streamlit secrets
 if 'api_key' not in st.session_state:
-    st.session_state.api_key = ''
+    st.session_state.api_key = os.getenv("OPENAI_API_KEY") or st.secrets.get("OPENAI_API_KEY", "")
 
 def display_pdf(uploaded_file):
 
@@ -28,7 +32,6 @@ def display_pdf(uploaded_file):
     st.pdf(uploaded_file, height=1000)
 
 
-
 def load_streamlit_page():
 
     """
@@ -45,10 +48,11 @@ def load_streamlit_page():
     col1, col2 = st.columns([0.5, 0.5], gap="large")
 
     with col1:
-        st.header("Input your OpenAI API key")
-        st.text_input('OpenAI API key', type='password', key='api_key',
-                    label_visibility="collapsed", disabled=False)
-        st.header("Upload file")
+        # st.header("Input your OpenAI API key")
+        # st.text_input('OpenAI API key', type='password', key='api_key',
+        #             label_visibility="collapsed", disabled=False)
+        st.header("RAG PDF System")
+        st.markdown("Upload a PDF document and extract structured data using OpenAI's LLM with intelligent document retrieval and verifiable answers.")
         uploaded_file = st.file_uploader("Please upload your PDF document:", type= "pdf")
 
     return col1, col2, uploaded_file
@@ -61,23 +65,21 @@ col1, col2, uploaded_file = load_streamlit_page()
 if uploaded_file is not None:
     with col2:
         display_pdf(uploaded_file)
-        
-    # Load in the documents
-    documents = get_pdf_text(uploaded_file)
-    st.session_state.vector_store = create_vectorstore_from_texts(documents, 
-                                                                  api_key=st.session_state.api_key,
-                                                                  file_name=uploaded_file.name)
-    st.write("Input Processed")
+    
+    with col1:
+        # Load in the documents
+        documents = get_pdf_text(uploaded_file)
+        st.session_state.vector_store = create_vectorstore_from_texts(documents, 
+                                                                      api_key=st.session_state.api_key,
+                                                                      file_name=uploaded_file.name)
+        st.success("Input Processed")
 
-# Generate answer
+# Extract structured data
 with col1:
-    if st.button("Generate table"):
-        with st.spinner("Generating answer"):
-            # Load vectorstore:
-
+    if st.button("Extract Paper Information"):
+        with st.spinner("Extracting paper metadata..."):
             answer = query_document(vectorstore = st.session_state.vector_store, 
                                     query = "Give me the title, summary, publication date, and authors of the research paper.",
                                     api_key = st.session_state.api_key)
                             
-            placeholder = st.empty()
-            placeholder = st.write(answer)
+            st.write(answer)
