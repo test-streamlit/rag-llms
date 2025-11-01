@@ -1,3 +1,5 @@
+# Attribution: Code adapted from Thu Vu's RAG tutorial
+# Reference: https://www.youtube.com/watch?v=EFUE4DHiAPM
 
 import streamlit as st  
 from functions import *
@@ -48,9 +50,6 @@ def load_streamlit_page():
     col1, col2 = st.columns([0.5, 0.5], gap="large")
 
     with col1:
-        # st.header("Input your OpenAI API key")
-        # st.text_input('OpenAI API key', type='password', key='api_key',
-        #             label_visibility="collapsed", disabled=False)
         st.header("RAG PDF System")
         st.markdown("Upload a PDF document and extract structured data using OpenAI's LLM with intelligent document retrieval and verifiable answers.")
         uploaded_file = st.file_uploader("Please upload your PDF document:", type= "pdf")
@@ -68,18 +67,29 @@ if uploaded_file is not None:
     
     with col1:
         # Load in the documents
-        documents = get_pdf_text(uploaded_file)
-        st.session_state.vector_store = create_vectorstore_from_texts(documents, 
-                                                                      api_key=st.session_state.api_key,
-                                                                      file_name=uploaded_file.name)
-        st.success("Input Processed")
+        with st.spinner("Convert PDF to text..."):
+            documents = get_pdf_text(uploaded_file)
+        st.success("PDF Converted to Text")
+        # Display documents
+        if st.checkbox("Show extracted pages", value=False):
+            st.write(f"**Total pages extracted:** {len(documents)}")
+            for i, doc in enumerate(documents):
+                page_num = doc.metadata.get('page', i + 1)
+                with st.expander(f"Page {page_num}", expanded=False):
+                    st.text_area(f"Content (Page {page_num}):", doc.page_content, height=200, key=f"page_{i}")
+        
+        with st.spinner("Creating Vectorstore..."):
+            st.session_state.vector_store = create_vectorstore_from_texts(documents, 
+                                                                          api_key=st.session_state.api_key,
+                                                                          file_name=uploaded_file.name)
+        st.success("Vector store created")        
 
 # Extract structured data
 with col1:
     if st.button("Extract Paper Information"):
-        with st.spinner("Extracting paper metadata..."):
+        with st.spinner("Extracting the title, summary, publication date, and authors of the research paper..."):
             answer = query_document(vectorstore = st.session_state.vector_store, 
-                                    query = "Give me the title, summary, publication date, and authors of the research paper.",
+                                    query = "Extract the title, summary, publication date, and authors of the research paper.",
                                     api_key = st.session_state.api_key)
                             
             st.write(answer)
