@@ -1,8 +1,8 @@
 
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
@@ -121,15 +121,12 @@ def create_vectorstore(chunks, embedding_function, file_name, vector_store_path=
             unique_chunks.append(chunk)        
 
     # Create a new Chroma database from the documents
+    # Chroma 0.4.x+ automatically persists documents, no need to call persist()
     vectorstore = Chroma.from_documents(documents=unique_chunks, 
                                         collection_name=clean_filename(file_name),
                                         embedding=embedding_function, 
                                         ids=list(unique_ids), 
                                         persist_directory = vector_store_path)
-
-    # The database should save automatically after we create it
-    # but we can also force it to save using the persist() method
-    vectorstore.persist()
     
     return vectorstore
 
